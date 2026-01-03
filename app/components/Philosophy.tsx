@@ -1,11 +1,15 @@
 'use client';
 
 import { motion, useInView, Variants } from 'framer-motion';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, RefObject } from 'react';
 import Image from 'next/image';
 import { philosophyTiming } from '@/app/utils/premiumMotion';
 import { useSectionReadiness } from '@/app/context/SectionReadiness';
 import { EDITORIAL_SPACING, EDITORIAL_TYPOGRAPHY } from '@/app/styles/spacing';
+
+interface PhilosophyProps {
+  exitRef?: RefObject<HTMLDivElement | null>;
+}
 
 // Authentic principles from Patrick's CVs - locked to 4 principles
 const principles = [
@@ -370,7 +374,7 @@ function PrinciplePanel({
   );
 }
 
-export default function Philosophy() {
+export default function Philosophy({ exitRef }: PhilosophyProps = {}) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [firstPrincipleComplete, setFirstPrincipleComplete] = useState(false);
@@ -446,6 +450,16 @@ export default function Philosophy() {
           prefersReducedMotion={prefersReducedMotion}
         />
       ))}
+
+      {/* Kinetic link anchor - exit point for mechanical transition to Works */}
+      {exitRef && (
+        <div
+          id="philosophy-exit-anchor"
+          ref={exitRef}
+          className="absolute bottom-0 left-0 right-0 h-px w-full"
+          style={{ zIndex: 1 }}
+        />
+      )}
     </section>
   );
 }

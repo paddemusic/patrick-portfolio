@@ -1,9 +1,14 @@
 'use client';
 
 import { motion, AnimatePresence, useInView, Variants } from 'framer-motion';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, RefObject } from 'react';
 import { EDITORIAL_SPACING, EDITORIAL_TYPOGRAPHY } from '@/app/styles/spacing';
 import { musicImages } from '@/app/content/imageManifest';
+
+interface MediaProps {
+  impactReady?: boolean;
+  exitRef?: RefObject<HTMLDivElement | null>;
+}
 
 // Featured track + optional expansion (2 more)
 const tracks = [
@@ -37,7 +42,7 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs.toString().padStart(2, '0')}`;
 }
 
-export default function Media() {
+export default function Media({ impactReady = false, exitRef }: MediaProps) {
   const [activeTrack, setActiveTrack] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -45,6 +50,8 @@ export default function Media() {
   const [showAllTracks, setShowAllTracks] = useState(false);
   const [canTrigger, setCanTrigger] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [didImpact, setDidImpact] = useState(false);
+  const [impactPulse, setImpactPulse] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const containerRef = useRef(null);
 
@@ -116,6 +123,16 @@ export default function Media() {
   useEffect(() => {
     setCanTrigger(true);
   }, []);
+
+  // Handle external impact trigger from KineticDrop
+  useEffect(() => {
+    if (impactReady && !didImpact && !prefersReducedMotion) {
+      setDidImpact(true);
+      setImpactPulse(true);
+      // Reset pulse after animation
+      setTimeout(() => setImpactPulse(false), 300);
+    }
+  }, [impactReady, didImpact, prefersReducedMotion]);
 
   const currentTrack = tracks[activeTrack];
 
@@ -240,13 +257,23 @@ export default function Media() {
         </motion.div>
 
         {/* Player Object - Single unit (album art + controls) */}
+        {/* Power-on brightness effect when drop impacts */}
         <motion.div
           variants={getVariant(playerObjectVariant, 1)}
           initial="hidden"
-          animate={canTrigger && isInView ? 'visible' : 'hidden'}
+          animate={
+            canTrigger && isInView
+              ? impactPulse && !prefersReducedMotion
+                ? {
+                    ...playerObjectVariant.visible,
+                    filter: ['blur(0px) brightness(1)', 'blur(0px) brightness(1.08)', 'blur(0px) brightness(1)'],
+                  }
+                : 'visible'
+              : 'hidden'
+          }
           transition={{
             delay: 0.45,
-            duration: prefersReducedMotion ? 0.3 : 1.6,
+            duration: impactPulse ? 0.28 : (prefersReducedMotion ? 0.3 : 1.6),
             ease: prefersReducedMotion ? undefined : [0.16, 0.0, 0.24, 1.0],
           }}
           className="max-w-2xl mx-auto"
@@ -474,6 +501,16 @@ export default function Media() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Kinetic link anchor - exit point for mechanical transition to Contact */}
+      {exitRef && (
+        <div
+          id="music-exit-anchor"
+          ref={exitRef}
+          className="absolute bottom-0 left-0 right-0 h-px w-full"
+          style={{ zIndex: 1 }}
+        />
+      )}
     </section>
   );
 }

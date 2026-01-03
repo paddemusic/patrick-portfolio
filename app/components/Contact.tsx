@@ -11,8 +11,14 @@ import {
 } from '@/app/utils/premiumMotion';
 import { EDITORIAL_SPACING, EDITORIAL_TYPOGRAPHY } from '@/app/styles/spacing';
 
-export default function Contact() {
+interface ContactProps {
+  impactReady?: boolean;
+}
+
+export default function Contact({ impactReady = false }: ContactProps) {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [didImpact, setDidImpact] = useState(false);
+  const [impactPulse, setImpactPulse] = useState(false);
   const containerRef = useRef(null);
 
   // State-based trigger at 30% viewport visibility
@@ -33,6 +39,16 @@ export default function Contact() {
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
+
+  // Handle external impact trigger from KineticReel
+  useEffect(() => {
+    if (impactReady && !didImpact && !prefersReducedMotion) {
+      setDidImpact(true);
+      setImpactPulse(true);
+      // Reset pulse after animation
+      setTimeout(() => setImpactPulse(false), 280);
+    }
+  }, [impactReady, didImpact, prefersReducedMotion]);
 
   // Reduced motion overrides
   const getVariant = (baseVariant: any) => {
@@ -75,39 +91,56 @@ export default function Contact() {
       <div className="container mx-auto px-6 max-w-4xl">
         {/* Cinematic Title Card - "Final Frame" atmospheric background */}
         <div className="relative">
+          {/* Final frame settle animation wrapper - triggers on reel lock */}
           <motion.div
-            variants={
-              prefersReducedMotion
-                ? { hidden: { opacity: 0 }, visible: { opacity: 0.22 } }
-                : titleCardVariant
+            initial={prefersReducedMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+            animate={
+              !prefersReducedMotion && impactPulse
+                ? {
+                    scale: [1, 1.01, 0.995, 1.0],
+                    opacity: [1, 1.06, 1],
+                  }
+                : {}
             }
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
             transition={{
-              delay: 0.35, // After heading starts
-              duration: prefersReducedMotion ? 0.3 : 1.5,
-              ease: prefersReducedMotion ? undefined : [0.16, 0.0, 0.24, 1.0],
-            }}
-            className="absolute top-0 left-1/2 -translate-x-1/2 overflow-hidden rounded-xl pointer-events-none"
-            style={{
-              width: 'min(1100px, 92vw)',
-              maxHeight: '55vh',
-              zIndex: 0,
+              duration: 0.28,
+              ease: [0.16, 0.0, 0.24, 1.0],
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/projects/election-tv2.jpg"
-              alt=""
-              aria-hidden="true"
-              className="w-full h-full object-cover rounded-xl"
-              style={{
-                maxHeight: '55vh',
-                filter: 'grayscale(55%)',
+            <motion.div
+              variants={
+                prefersReducedMotion
+                  ? { hidden: { opacity: 0 }, visible: { opacity: 0.22 } }
+                  : titleCardVariant
+              }
+              initial="hidden"
+              animate={isInView ? 'visible' : 'hidden'}
+              transition={{
+                delay: 0.35, // After heading starts
+                duration: prefersReducedMotion ? 0.3 : 1.5,
+                ease: prefersReducedMotion ? undefined : [0.16, 0.0, 0.24, 1.0],
               }}
-            />
-            {/* Readability overlay */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/50 to-black/45 rounded-xl" />
+              className="absolute top-0 left-1/2 -translate-x-1/2 overflow-hidden rounded-xl pointer-events-none"
+              style={{
+                width: 'min(1100px, 92vw)',
+                maxHeight: '55vh',
+                zIndex: 0,
+              }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/projects/election-tv2.jpg"
+                alt=""
+                aria-hidden="true"
+                className="w-full h-full object-cover rounded-xl"
+                style={{
+                  maxHeight: '55vh',
+                  filter: 'grayscale(55%)',
+                }}
+              />
+              {/* Readability overlay */}
+              <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/50 to-black/45 rounded-xl" />
+            </motion.div>
           </motion.div>
 
           {/* Content wrapper with elevated z-index */}

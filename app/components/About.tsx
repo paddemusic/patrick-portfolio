@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, RefObject } from 'react';
 import Image from 'next/image';
 import { FluidText } from './ui/Typography';
 import {
@@ -15,7 +15,11 @@ import { useSectionReadiness } from '@/app/context/SectionReadiness';
 import { EDITORIAL_SPACING, EDITORIAL_TYPOGRAPHY } from '@/app/styles/spacing';
 import { aboutImages } from '@/app/content/imageManifest';
 
-export default function About() {
+interface AboutProps {
+  exitRef?: RefObject<HTMLDivElement | null>;
+}
+
+export default function About({ exitRef }: AboutProps) {
   const ref = useRef(null);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const { markSectionReady } = useSectionReadiness();
@@ -189,6 +193,16 @@ export default function About() {
           zIndex: 20,
         }}
       />
+
+      {/* Kinetic link anchor - exit point for mechanical transition */}
+      {exitRef && (
+        <div
+          id="about-exit-anchor"
+          ref={exitRef}
+          className="absolute bottom-0 left-0 right-0 h-px w-full"
+          style={{ zIndex: 1 }}
+        />
+      )}
     </section>
   );
 }

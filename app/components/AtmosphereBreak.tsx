@@ -1,11 +1,16 @@
 'use client';
 
 import { motion, useInView, Variants } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, RefObject } from 'react';
 import Image from 'next/image';
 import { useSectionReadiness } from '@/app/context/SectionReadiness';
 
-export default function AtmosphereBreak() {
+interface AtmosphereBreakProps {
+  entryRef?: RefObject<HTMLDivElement | null>;
+  impactReady?: boolean;
+}
+
+export default function AtmosphereBreak({ entryRef, impactReady = false }: AtmosphereBreakProps) {
   const { isSectionReady, markSectionReady } = useSectionReadiness();
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
   const containerRef = useRef(null);
@@ -80,6 +85,9 @@ export default function AtmosphereBreak() {
     return baseVariant;
   };
 
+  // Combine conditions: animate when in view AND (impact ready OR reduced motion)
+  const shouldAnimate = isInView && (impactReady || prefersReducedMotion);
+
   return (
     <section
       id="atmosphere-break"
@@ -92,12 +100,22 @@ export default function AtmosphereBreak() {
       }}
       aria-label="Atmosphere"
     >
+      {/* Kinetic link anchor - entry point for mechanical transition */}
+      {entryRef && (
+        <div
+          id="atmosphere-entry-anchor"
+          ref={entryRef}
+          className="absolute top-0 left-0 right-0 h-px w-full"
+          style={{ zIndex: 1 }}
+        />
+      )}
+
       <div className="flex flex-col items-center">
         {/* Chapter Marker - Cinematic transition punctuation */}
         <motion.div
           variants={getVariant(chapterVariant, 0.45)}
           initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
+          animate={shouldAnimate ? 'visible' : 'hidden'}
           transition={{
             delay: 0,
             duration: prefersReducedMotion ? 0.3 : 1.1,
@@ -118,7 +136,7 @@ export default function AtmosphereBreak() {
         <motion.div
           variants={getVariant(titleCardVariant, 0.28)}
           initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
+          animate={shouldAnimate ? 'visible' : 'hidden'}
           transition={{
             delay: 0.15,
             duration: prefersReducedMotion ? 0.3 : 1.6,

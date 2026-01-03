@@ -1,11 +1,15 @@
 'use client';
 
 import { motion, useInView, Variants } from 'framer-motion';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, RefObject } from 'react';
 import SectionBridge from './ui/SectionBridge';
 import { useSectionReadiness } from '@/app/context/SectionReadiness';
 import { EDITORIAL_SPACING, EDITORIAL_TYPOGRAPHY, CARD_STYLES } from '@/app/styles/spacing';
 import { worksImages } from '@/app/content/imageManifest';
+
+interface WorkProps {
+  exitRef?: RefObject<HTMLDivElement | null>;
+}
 
 interface Project {
   id: string;
@@ -75,6 +79,55 @@ function ProjectCard({
   isInView: boolean;
   prefersReducedMotion: boolean;
 }) {
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovering, setIsHovering] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const cardRef = useRef<HTMLAnchorElement>(null);
+
+  // Detect touch device on mount
+  useEffect(() => {
+    setIsTouchDevice('ontouchstart' in window);
+  }, []);
+
+  // Track mouse position for tilt effect
+  const handleMouseMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    if (isTouchDevice || prefersReducedMotion) return;
+
+    const card = cardRef.current;
+    if (!card) return;
+
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width; // 0 to 1
+    const y = (e.clientY - rect.top) / rect.height; // 0 to 1
+
+    setMousePosition({ x, y });
+  };
+
+  const handleMouseEnter = () => {
+    if (!isTouchDevice && !prefersReducedMotion) {
+      setIsHovering(true);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+    setMousePosition({ x: 0.5, y: 0.5 });
+  };
+
+  // Calculate tilt based on mouse position
+  const getTiltStyle = () => {
+    if (!isHovering || isTouchDevice || prefersReducedMotion) {
+      return {};
+    }
+
+    // Map 0-1 to -8 to 8 degrees
+    const tiltX = (mousePosition.y - 0.5) * -16; // Inverted for natural feel
+    const tiltY = (mousePosition.x - 0.5) * 16;
+
+    return {
+      transform: `perspective(1000px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-6px) scale(1.01)`,
+    };
+  };
   // Cinematic card variant - weight + soft depth
   const cardVariant: Variants = {
     hidden: {
@@ -118,15 +171,30 @@ function ProjectCard({
       className="group relative"
     >
       <motion.a
+        ref={cardRef}
         href={project.link || `#${project.id}`}
         className={`block ${CARD_STYLES.background} border ${CARD_STYLES.border} ${CARD_STYLES.borderRadius} transition-all duration-500 ${CARD_STYLES.borderHover} ${CARD_STYLES.backgroundHover}
-                   focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-black`}
+                   focus:outline-none focus:ring-2 focus:ring-white/20 focus:ring-offset-2 focus:ring-offset-black overflow-hidden`}
         style={{
           padding: CARD_STYLES.padding,
+          position: 'relative',
+          ...(isTouchDevice || prefersReducedMotion ? {} : getTiltStyle()),
+          transition: 'transform 0.15s ease-out, border-color 0.5s, background-color 0.5s',
         }}
-        whileHover={{ y: -6, scale: 1.01 }}
-        transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1.0] }}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
       >
+        {/* Sheen gradient that follows cursor */}
+        {isHovering && !isTouchDevice && !prefersReducedMotion && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `radial-gradient(600px circle at ${mousePosition.x * 100}% ${mousePosition.y * 100}%, rgba(255, 255, 255, 0.06), transparent 40%)`,
+              zIndex: 1,
+            }}
+          />
+        )}
         {/* Film Still Image - Top on mobile, right on desktop */}
         <div className="relative mb-6 lg:float-right lg:ml-6 lg:mb-0 overflow-hidden rounded-xl border border-white/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -274,7 +342,7 @@ function ProjectCard({
  * Heading resolves like title card, cards arrive with weight + depth
  * Safe trigger model: no gating, visible by default
  */
-export default function Work() {
+export default function Work({ exitRef }: WorkProps = {}) {
   const { markSectionReady } = useSectionReadiness();
   const [canTrigger, setCanTrigger] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -450,6 +518,16 @@ export default function Work() {
           ))}
         </div>
       </div>
+
+      {/* Kinetic link anchor - exit point for mechanical transition to Partners */}
+      {exitRef && (
+        <div
+          id="work-exit-anchor"
+          ref={exitRef}
+          className="absolute bottom-0 left-0 right-0 h-px w-full"
+          style={{ zIndex: 1 }}
+        />
+      )}
     </section>
   );
 }

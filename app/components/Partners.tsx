@@ -1,13 +1,20 @@
 'use client';
 
 import { motion, useInView, Variants } from 'framer-motion';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, RefObject } from 'react';
 import { FluidText } from './ui/Typography';
 import { EDITORIAL_SPACING, EDITORIAL_TYPOGRAPHY } from '@/app/styles/spacing';
 
-export default function Partners() {
+interface PartnersProps {
+  impactReady?: boolean;
+  exitRef?: RefObject<HTMLDivElement | null>;
+}
+
+export default function Partners({ impactReady = false, exitRef }: PartnersProps) {
   const [canTrigger, setCanTrigger] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [didImpact, setDidImpact] = useState(false);
+  const [impactPulse, setImpactPulse] = useState(false);
   const containerRef = useRef(null);
 
   // State-based trigger - safe, no gating
@@ -79,6 +86,16 @@ export default function Partners() {
   useEffect(() => {
     setCanTrigger(true);
   }, []);
+
+  // Handle external impact trigger from KineticCable
+  useEffect(() => {
+    if (impactReady && !didImpact && !prefersReducedMotion) {
+      setDidImpact(true);
+      setImpactPulse(true);
+      // Reset pulse after animation
+      setTimeout(() => setImpactPulse(false), 300);
+    }
+  }, [impactReady, didImpact, prefersReducedMotion]);
 
   // Reduced motion override
   const getVariant = (baseVariant: Variants, targetOpacity: number = 1): Variants => {
@@ -171,7 +188,25 @@ export default function Partners() {
             </motion.div>
 
             {/* Logos - ALL reveal simultaneously at 0.55s (NO stagger) */}
-            <div className="relative grid grid-cols-2 md:grid-cols-4" style={{ gap: EDITORIAL_SPACING.componentGapLarge, zIndex: 1 }}>
+            {/* Stamp animation wrapper - decisive impact on enter OR when cable connects */}
+            <motion.div
+              initial={prefersReducedMotion ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+              animate={
+                !prefersReducedMotion && ((canTrigger && isInView) || impactPulse)
+                  ? {
+                      scale: [1, 1.02, 0.98, 1.0],
+                      opacity: [0.95, 1],
+                    }
+                  : {}
+              }
+              transition={{
+                delay: impactPulse ? 0 : 0.55, // Immediate if triggered by cable, otherwise 0.55s
+                duration: 0.24,
+                ease: [0.16, 0.0, 0.24, 1.0],
+              }}
+              className="relative grid grid-cols-2 md:grid-cols-4"
+              style={{ gap: EDITORIAL_SPACING.componentGapLarge, zIndex: 1 }}
+            >
             {[
               { name: 'TV2', src: '/images/clients/tv2.png' },
               { name: 'Sony Music', src: '/images/clients/sony-music.png' },
@@ -206,10 +241,20 @@ export default function Partners() {
                 />
               </motion.div>
             ))}
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
+
+      {/* Kinetic link anchor - exit point for mechanical transition to Music */}
+      {exitRef && (
+        <div
+          id="partners-exit-anchor"
+          ref={exitRef}
+          className="absolute bottom-0 left-0 right-0 h-px w-full"
+          style={{ zIndex: 1 }}
+        />
+      )}
     </section>
   );
 }
