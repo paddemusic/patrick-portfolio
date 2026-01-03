@@ -159,10 +159,10 @@ export default function Hero() {
           }}
         >
           {/* First word: "patrick" - 1.2s initial hold, then 1.8s entrance */}
+          {/* Wrapper has cinematic animation, inner text renders immediately for LCP */}
           <motion.span
-            variants={getVariant(nameVariant)}
-            initial="hidden"
-            animate="visible"
+            initial={{ opacity: 0, scale: 0.98, filter: 'blur(2px)' }}
+            animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
             transition={{
               delay: prefersReducedMotion ? 0.3 : 1.2,
               duration: prefersReducedMotion ? 0.3 : 1.8,
@@ -170,7 +170,9 @@ export default function Hero() {
             }}
             className="inline-block"
           >
-            patrick
+            <span className="inline-block" style={{ opacity: 1 }}>
+              patrick
+            </span>
           </motion.span>
           {' '}
           {/* Second word: "jørgensen" - Enters at 3.4s */}
