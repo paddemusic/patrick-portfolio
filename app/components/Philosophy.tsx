@@ -2,6 +2,7 @@
 
 import { motion, useInView, Variants } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { philosophyTiming } from '@/app/utils/premiumMotion';
 import { useSectionReadiness } from '@/app/context/SectionReadiness';
 import { EDITORIAL_SPACING, EDITORIAL_TYPOGRAPHY } from '@/app/styles/spacing';
@@ -127,17 +128,18 @@ function IntroPanel({
           style={{
             width: 'min(1100px, 92vw)',
             maxHeight: '55vh',
+            aspectRatio: '16/9',
             zIndex: 0,
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/images/gallery/atmosphere-2.jpg"
             alt=""
             aria-hidden="true"
-            className="w-full h-full object-cover rounded-xl"
+            fill
+            sizes="(max-width: 1100px) 92vw, 1100px"
+            className="object-cover rounded-xl"
             style={{
-              maxHeight: '55vh',
               filter: 'grayscale(50%)',
             }}
           />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, Variants } from 'framer-motion';
+import Image from 'next/image';
 
 export default function Hero() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
@@ -127,16 +128,18 @@ export default function Hero() {
           style={{
             width: 'min(1200px, 92vw)',
             maxHeight: '70vh',
+            aspectRatio: '16/9',
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/images/gallery/atmosphere-1.jpg"
             alt=""
             aria-hidden="true"
-            className="w-full h-full object-cover rounded-xl"
+            fill
+            priority
+            sizes="(max-width: 1200px) 92vw, 1200px"
+            className="object-cover rounded-xl"
             style={{
-              maxHeight: '70vh',
               filter: 'grayscale(55%) brightness(0.55) contrast(1.05)',
             }}
           />

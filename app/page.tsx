@@ -37,14 +37,16 @@ export default function Home() {
             className="min-h-screen bg-black text-white"
           >
             <NavigationNew />
-            <Hero />
-            <About />
-            <AtmosphereBreak />
-            <Philosophy />
-            <Work />
-            <Partners />
-            <Media />
-            <Contact />
+            <main>
+              <Hero />
+              <About />
+              <AtmosphereBreak />
+              <Philosophy />
+              <Work />
+              <Partners />
+              <Media />
+              <Contact />
+            </main>
           </motion.div>
         </CursorFollowGradient>
       </SmoothScroll>

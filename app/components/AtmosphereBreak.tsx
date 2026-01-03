@@ -2,6 +2,7 @@
 
 import { motion, useInView, Variants } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useSectionReadiness } from '@/app/context/SectionReadiness';
 
 export default function AtmosphereBreak() {
@@ -127,16 +128,17 @@ export default function AtmosphereBreak() {
           style={{
             width: 'min(1100px, 92vw)',
             maxHeight: '55vh',
+            aspectRatio: '16/9',
           }}
         >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/images/gallery/atmosphere-2.jpg"
             alt=""
             aria-hidden="true"
-            className="w-full h-full object-cover rounded-xl"
+            fill
+            sizes="(max-width: 1100px) 92vw, 1100px"
+            className="object-cover rounded-xl"
             style={{
-              maxHeight: '55vh',
               filter: 'grayscale(50%)',
             }}
           />

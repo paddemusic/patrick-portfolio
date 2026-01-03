@@ -2,6 +2,7 @@
 
 import { motion, useInView } from 'framer-motion';
 import { useRef, useEffect, useState } from 'react';
+import Image from 'next/image';
 import { FluidText } from './ui/Typography';
 import {
   aboutLabel,
@@ -154,14 +155,14 @@ export default function About() {
             }}
             className="pt-24"
           >
-            <div className="relative overflow-hidden rounded-xl border border-zinc-800/50 group cursor-pointer">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+            <div className="relative overflow-hidden rounded-xl border border-zinc-800/50 group cursor-pointer" style={{ aspectRatio: '16/9', maxHeight: '70vh' }}>
+              <Image
                 src={aboutImages[0].src}
                 alt={aboutImages[0].alt}
-                className="w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
                 style={{
-                  maxHeight: '70vh',
                   objectPosition: 'center',
                 }}
               />
